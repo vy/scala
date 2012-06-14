@@ -55,6 +55,18 @@ END-USER TARGETS
     </antcall>
   </target>
 
+
+  <target name="partialdist" depends="dist.partial"
+    description="Makes a new distribution without documentation, so just for testing."/>
+
+  <target name="partialdist-opt"
+    description="Makes a new optimised distribution without testing it or removing partially build elements.">
+    <antcall target="partialdist">
+      <param name="scalac.args.optimise" value="-optimise"/>
+    </antcall>
+  </target>
+
+
   <target name="fastdist" depends="dist.done"
     description="Makes a new distribution without testing it or removing partially build elements."/>
 
@@ -2377,7 +2389,7 @@ BOOTRAPING TEST AND TEST SUITE
 DISTRIBUTION
 ============================================================================ -->
 
-  <target name="dist.start" depends="docs.done, pack.done">
+  <target name="dist.start" depends="pack.done">
     <property name="dist.name" value="scala-${version.number}"/>
     <property name="dist.dir" value="${dists.dir}/${dist.name}"/>
   </target>
@@ -2402,7 +2414,7 @@ DISTRIBUTION
     </copy>
   </target>
 
-  <target name="dist.doc" depends="dist.base">
+  <target name="dist.doc" depends="dist.base, docs.done">
     <mkdir dir="${dist.dir}/doc/scala-devel-docs"/>
     <copy file="${docs.dir}/LICENSE" toDir="${dist.dir}/doc"/>
     <copy file="${docs.dir}/README" toDir="${dist.dir}/doc"/>
@@ -2461,11 +2473,11 @@ DISTRIBUTION
     </jar>
   </target>
 
-  <target name="dist.latest.unix" depends="dist.src" unless="os.win">
+  <target name="dist.latest.unix" depends="dist.base" unless="os.win">
     <symlink link="${dists.dir}/latest" resource="${dist.name}" overwrite="yes"/>
   </target>
 
-  <target name="dist.latest.win" depends="dist.src" if="os.win">
+  <target name="dist.latest.win" depends="dist.base" if="os.win">
     <copy todir="${dists.dir}/latest">
       <fileset dir="${dist.dir}"/>
     </copy>
@@ -2473,7 +2485,9 @@ DISTRIBUTION
 
   <target name="dist.latest" depends="dist.latest.unix,dist.latest.win"/>
 
-  <target name="dist.done" depends="dist.latest"/>
+  <target name="dist.partial" depends="dist.base, dist.latest"/>
+
+  <target name="dist.done" depends="dist.latest, dist.src"/>
 
   <target name="dist.clean">
     <delete dir="${dists.dir}" includeemptydirs="yes" quiet="yes" failonerror="no"/>
